@@ -148,7 +148,9 @@
       <select id="eventCategory" onchange="toggleJobSelect()"></select>
       <select id="jobSelector" style="display:none;"></select>
       <input type="text" id="eventTitle" placeholder="タイトル">
+      <label for="jobStart">開始時間</label>
       <input type="time" id="eventStart">
+      <label for="jobFinish">終了時間</label>
       <input type="time" id="eventEnd">
       <textarea id="eventMemo" placeholder="メモ（任意）"></textarea>
       <button onclick="saveEvent()" class="button">保存</button>
@@ -160,8 +162,10 @@
       <input type="text" id="breakfast" placeholder="朝食">
       <input type="text" id="lunch" placeholder="昼食">
       <input type="text" id="dinner" placeholder="夕食">
-      <input type="time" id="wakeUp" placeholder="起床時間">
-      <input type="time" id="sleep" placeholder="就寝時間">
+      <label for="wakeupTime">起床時間</label>
+      <input type="time" id="wakeUp">
+      <label for="sleepTime">就寝時間</label>
+      <input type="time" id="sleep">
       <input type="number" id="exercise" placeholder="運動時間（分）">
       <textarea id="notes" placeholder="活動記録"></textarea>
       <button onclick="saveDiary()" class="button">保存</button>
