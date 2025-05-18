@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>目標の編集</title>
+  <link rel="stylesheet" href="goals.css">
+</head>
+<body>
+  <div class="container">
+    <h1>🎯 目標を編集</h1>
+    <a href="index.html" class="button">← ホームに戻る</a>
+
+    <div id="goalEditForm" style="margin: 20px;">
+      <input type="text" id="goalTitle" placeholder="目標タイトル">
+      <input type="text" id="goalCategory" placeholder="カテゴリ">
+      <input type="date" id="goalDeadline">
+      <div id="goalExtraFields"></div>
+      <button class="button" onclick="saveEditedGoal()">保存</button>
+    </div>
+  </div>
+
+  <script>
+    let goals = JSON.parse(localStorage.getItem("goals") || "[]");
+    const editingGoal = JSON.parse(localStorage.getItem("editingGoal") || "null");
+
+    if (!editingGoal) {
+      alert("編集対象の目標が見つかりませんでした。");
+      location.href = "index.html";
+    }
+
+    document.getElementById("goalTitle").value = editingGoal.title;
+    document.getElementById("goalCategory").value = editingGoal.category;
+    document.getElementById("goalDeadline").value = editingGoal.deadline;
+
+    const extraFields = document.getElementById("goalExtraFields");
+    if (editingGoal.type === "quantitative") {
+      extraFields.innerHTML = `
+        <select id="goalTargetType">
+          <option value="時間">時間</option>
+          <option value="回数">回数</option>
+        </select>
+        <input type="number" id="goalTargetValue" placeholder="目標値">
+      `;
+      document.getElementById("goalTargetType").value = editingGoal.targetType;
+      document.getElementById("goalTargetValue").value = editingGoal.targetValue;
+    } else if (editingGoal.type === "checklist") {
+      extraFields.innerHTML = `
+        <textarea id="goalChecklistItems" placeholder="改行区切りでステップ入力"></textarea>
+      `;
+      document.getElementById("goalChecklistItems").value = editingGoal.items.map(i => i.text).join("\n");
+    } else if (editingGoal.type === "free") {
+      extraFields.innerHTML = `
+        <textarea id="goalDescription" placeholder="自由記述"></textarea>
+      `;
+      document.getElementById("goalDescription").value = editingGoal.description;
+    }
+
+    function saveEditedGoal() {
+      const title = document.getElementById("goalTitle").value;
+      const category = document.getElementById("goalCategory").value;
+      const deadline = document.getElementById("goalDeadline").value;
+
+      const index = goals.findIndex(g => g.id === editingGoal.id);
+      if (index === -1) return;
+
+      const updatedGoal = { ...editingGoal, title, category, deadline };
+
+      if (editingGoal.type === "quantitative") {
+        updatedGoal.targetType = document.getElementById("goalTargetType").value;
+        updatedGoal.targetValue = parseFloat(document.getElementById("goalTargetValue").value);
+      } else if (editingGoal.type === "checklist") {
+        const lines = document.getElementById("goalChecklistItems").value.split("\n");
+        updatedGoal.items = lines.map((text, i) => ({ text, done: editingGoal.items[i]?.done || false }));
+      } else if (editingGoal.type === "free") {
+        updatedGoal.description = document.getElementById("goalDescription").value;
+      }
+
+      goals[index] = updatedGoal;
+      localStorage.setItem("goals", JSON.stringify(goals));
+      localStorage.removeItem("editingGoal");
+      alert("目標を更新しました。");
+      location.href = "index.html";
+    }
+  </script>
+</body>
+</html>

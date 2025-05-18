@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>目標設定と進捗管理</title>
+  <link rel="stylesheet" href="goals.css">
+</head>
+<body>
+  <div class="container">
+    <h1>🎯 目標設定</h1>
+    <a href="index.html" class="button">← カレンダーに戻る</a>
+
+    <section id="goalFormSection">
+      <h2>目標を追加</h2>
+      <label for="goalType">目標タイプ:</label>
+      <select id="goalType" onchange="switchGoalTypeForm()">
+        <option value="checklist">チェックリスト</option>
+        <option value="free">自由記述</option>
+      </select>
+
+      <div id="goalFormContainer"></div>
+    </section>
+
+    <section id="goalsList">
+      <div id="goalContainer"></div>
+    </section>
+  </div>
+
+  <script src="goals.js"></script>
+  <script>
+    // 初期表示切り替え
+    document.addEventListener("DOMContentLoaded", () => {
+      switchGoalTypeForm();
+    });
+
+    function switchGoalTypeForm() {
+      const container = document.getElementById("goalFormContainer");
+      const type = document.getElementById("goalType").value;
+      let html = '';
+
+      if (type === "checklist") {
+        html = `
+          <input type="text" id="goalTitle" placeholder="目標タイトル">
+          <input type="text" id="goalCategory" placeholder="カテゴリ（例：就職）">
+          <label for="goalType">締め切り</label>
+          <input type="date" id="goalDeadline">
+          <button onclick="generateAiSuggestion()" class="button">💡 AIからの提案</button>
+          <div id="aiSuggestionResult" style="margin-top: 1em; font-size: 0.95rem;"></div>
+          <textarea id="goalChecklistItems" placeholder="ステップを改行で入力\n<例>\n1.履歴書を書く\n2.テストを受ける\n3.面接を申し込む"></textarea>
+          <button class="button" onclick="addChecklistGoal()">追加</button>
+        `;
+      } else if (type === "free") {
+        html = `
+          <input type="text" id="goalTitle" placeholder="目標タイトル">
+          <input type="text" id="goalCategory" placeholder="カテゴリ（例：人生目標）">
+          <label for="goalType">締め切り</label>
+          <input type="date" id="goalDeadline">
+          <button onclick="generateAiSuggestion()" class="button">💡 AIからの提案</button>
+          <div id="aiSuggestionResult" style="margin-top: 1em; font-size: 0.95rem;"></div>
+          <textarea id="goalDescription" placeholder="目標の背景や考えなど自由に記述"></textarea>
+          <button class="button" onclick="addFreeGoal()">追加</button>
+        `;
+      }
+      container.innerHTML = html;
+    }
+  </script>
+  <script src="goals.js"></script>
+  <script src="goals-index.js"></script>
+</body>
+</html>

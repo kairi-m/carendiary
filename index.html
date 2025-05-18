@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>多機能カレンダー</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <h1>カレンダイアリー</h1>
+    <p>予定と日記をひとつに。あなたの毎日を見える化する多機能カレンダーアプリ。</p>
+    <header>
+      <h2 id="monthYear"></h2>
+      <div>
+        <button onclick="changeMonth(-1)" class="button">←</button>
+        <button onclick="changeMonth(1)" class="button">→</button>
+      </div>
+    </header>
+
+  <div id="homeGoalsSection">
+    <h2>現在の目標</h2>
+    <div id="goalContainer"></div>
+    <div style="margin: 20px;">
+      <a href="goals.html#add" class="button">➕ 目標の追加</a>
+      <a href="goals.html#list" class="button">📈 進捗管理</a>
+      <a href="achieved-goals.html" class="button">✔ 達成した目標</a>
+    </div>
+  </div>
+
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const homeGoalsList = document.getElementById("homeGoalsList");
+    const goals = JSON.parse(localStorage.getItem("goals") || "[]");
+
+    if (goals.length === 0) {
+      homeGoalsList.innerHTML = "<p>現在、登録された目標はありません。</p>";
+      return;
+    }
+
+    goals.forEach(goal => {
+      const div = document.createElement("div");
+      div.className = "goal-card";
+      div.style.marginBottom = "15px";
+
+      if (goal.type === "quantitative") {
+        const percent = Math.min((goal.currentProgress / goal.targetValue) * 100, 100);
+        div.innerHTML = `
+          <strong>${goal.title}</strong><br>
+          <small>${goal.category} ／ 進捗: ${goal.currentProgress}/${goal.targetValue}${goal.targetType}</small>
+          <div style="background:#eee; height:10px; border-radius:5px; overflow:hidden; margin-top:5px;">
+            <div style="width:${percent}%; height:100%; background:#2ecc71;"></div>
+          </div>
+          <button class="button" onclick="editGoal(${goal.id})">編集</button>
+          <button class="delete" onclick="deleteGoal(${goal.id})">削除</button>
+        `;
+      } else if (goal.type === "checklist") {
+        const done = goal.items.filter(item => item.done).length;
+        const percent = Math.min((done / goal.items.length) * 100, 100);
+        div.innerHTML = `
+          <strong>${goal.title}</strong><br>
+          <small>${goal.category} ／ チェック: ${done}/${goal.items.length}</small>
+          <div style="background:#eee; height:10px; border-radius:5px; overflow:hidden; margin-top:5px;">
+            <div style="width:${percent}%; height:100%; background:#f39c12;"></div>
+          </div>
+          <button class="button" onclick="editGoal(${goal.id})">編集</button>
+          <button class="delete" onclick="deleteGoal(${goal.id})">削除</button>
+        `;
+      } else if (goal.type === "free") {
+        const status = goal.status === "達成" ? "✔ 達成済み" : "⏳ 未達成";
+        div.innerHTML = `
+          <strong>${goal.title}</strong><br>
+          <small>${goal.category} ／ 状態: ${status}</small>
+          <button class="button" onclick="editGoal(${goal.id})">編集</button>
+          <button class="delete" onclick="deleteGoal(${goal.id})">削除</button>
+        `;
+      }
+    });
+  });
+
+  function editGoal(id) {
+    window.location.href = `goals.html#edit-${id}`;
+  }
+
+  function deleteGoal(id) {
+    if (!confirm("本当に削除しますか？")) return;
+    let goals = JSON.parse(localStorage.getItem("goals") || "[]");
+    goals = goals.filter(g => g.id !== id);
+    localStorage.setItem("goals", JSON.stringify(goals));
+    location.reload();
+  }
+</script>
+
+    <div id="aiSearchSection">
+      <h2>AI予定検索</h2>
+      <input type="text" id="aiQuery" placeholder="例：埼玉県の夏祭りの日程">
+      <button onclick="searchWithAI()" class="button">検索</button>
+      <div id="aiResults"></div>
+    </div>
+
+    <div style="margin: 20px 0;">
+      <a href="diary-list.html" class="button">📖 日記一覧を見る</a>
+    </div>
+
+    <div style="margin: 20px 0";>
+      <a href="lifestyle-dashboard.html" class="button">📊 生活習慣ダッシュボード</a>
+    </div>
+
+    <div>
+      <button onclick="toggleDisplay('categorySettings')" class="button">カテゴリー設定</button>
+      <button onclick="toggleDisplay('jobSettings')" class="button">バイト設定</button>
+    </div>
+
+    <p id="salaryDisplay" style="margin: 10px 0; font-weight: bold;"></p>
+
+    <div id="categorySettings" style="display: none;">
+      <p>※ カテゴリは最大10個まで設定可能です</p>
+      <input type="text" id="newCategoryName" placeholder="カテゴリ名">
+      <select id="newCategoryColor">
+        <option value="#1abc9c">緑</option>
+        <option value="#e67e22">オレンジ</option>
+        <option value="#34495e">グレー</option>
+        <option value="#d35400">赤茶</option>
+        <option value="#8e44ad">紫</option>
+      </select>
+      <button onclick="addCategory(event)" class="button">追加</button>
+      <ul id="categoryList"></ul>
+    </div>
+
+    <div id="jobSettings" style="display: none;">
+      <input type="text" id="jobName" placeholder="バイト名">
+      <input type="number" id="jobWage" placeholder="時給 (円)" min="0">
+      <input type="number" id="jobUnit" placeholder="何分単位 (例: 15)" min="1">
+      <button onclick="addJob()" class="button">追加</button>
+      <ul id="jobList"></ul>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>日</th><th>月</th><th>火</th><th>水</th><th>木</th><th>金</th><th>土</th>
+        </tr>
+      </thead>
+      <tbody id="calendar-body"></tbody>
+    </table>
+
+    <div id="eventForm" style="display:none;">
+      <h2 id="selectedDate">予定追加</h2>
+      <select id="eventCategory" onchange="toggleJobSelect()"></select>
+      <select id="jobSelector" style="display:none;"></select>
+      <input type="text" id="eventTitle" placeholder="タイトル">
+      <input type="time" id="eventStart">
+      <input type="time" id="eventEnd">
+      <textarea id="eventMemo" placeholder="メモ（任意）"></textarea>
+      <button onclick="saveEvent()" class="button">保存</button>
+      <button onclick="closeEventForm()" class="button">閉じる</button>
+    </div>
+
+    <div id="diaryForm" style="display:none;">
+      <h2 id="selectedDiaryDate">日記入力</h2>
+      <input type="text" id="breakfast" placeholder="朝食">
+      <input type="text" id="lunch" placeholder="昼食">
+      <input type="text" id="dinner" placeholder="夕食">
+      <input type="time" id="wakeUp" placeholder="起床時間">
+      <input type="time" id="sleep" placeholder="就寝時間">
+      <input type="number" id="exercise" placeholder="運動時間（分）">
+      <textarea id="notes" placeholder="活動記録"></textarea>
+      <button onclick="saveDiary()" class="button">保存</button>
+      <button onclick="closeDiaryForm()" class="button">閉じる</button>
+    </div>
+  </div>
+
+  <script>
+    function toggleDisplay(id) {
+      const elem = document.getElementById(id);
+      elem.style.display = (elem.style.display === "none") ? "block" : "none";
+    }
+  </script>
+  <script src="script.js"></script>
+  <script src="goals-index.js"></script>
+</body>
+</html>
