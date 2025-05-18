@@ -94,7 +94,7 @@ window.generateAiSuggestion = async function () {
   suggestionArea.textContent = "提案を生成中...";
 
   try {
-    const response = await fetch("http://localhost:3001/goal-advice", {
+    const response = await fetch("https://openai-proxy-server-w980.onrender.com/goal-advice", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ userPrompt })

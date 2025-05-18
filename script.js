@@ -379,7 +379,7 @@ async function searchWithAI() {
   if (!query) return alert("検索内容を入力してください");
 
   try {
-    const res = await fetch("http://localhost:3001/ask", {
+    const res = await fetch("https://openai-proxy-server-w980.onrender.com/ask", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ userPrompt: query })
@@ -426,7 +426,7 @@ function addAIResultToCalendar(date, title) {
 
 async function evaluateDiaryWithAI(entry) {
   try {
-    const response = await fetch("http://localhost:3001/evaluate", {
+    const response = await fetch("https://openai-proxy-server-w980.onrender.com/evaluate", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ entry })
