@@ -7,47 +7,51 @@
   }
 
   function renderGoals() {
-    if (!goalContainer) return;
-    goalContainer.innerHTML = "";
-    goals.forEach(goal => {
-      const div = document.createElement("div");
-      div.className = "goal-card";
+  if (!goalContainer) return;
+  goalContainer.innerHTML = "";
 
-      if (goal.type === "quantitative") {
-        const percent = Math.min((goal.currentProgress || 0) / goal.targetValue * 100, 100);
-        div.innerHTML = `
-          <h3>${goal.title}</h3>
-          <p>${goal.category} ／ ${goal.deadline}</p>
-          <p>進捗: ${(goal.currentProgress || 0)} / ${goal.targetValue}${goal.targetType}</p>
-          <div class="progress-bar"><div class="progress-fill" style="width:${percent}%"></div></div>
-          <input type="number" id="progressInput-${goal.id}" placeholder="追加${goal.targetType}">
-          <button class="button" onclick="updateProgress(${goal.id})">進捗を追加</button>
-        `;
-      } else if (goal.type === "checklist") {
-        const doneCount = goal.items.filter(i => i.done).length;
-        const percent = Math.min(doneCount / goal.items.length * 100, 100);
-        div.innerHTML = `
-          <h3>${goal.title}</h3>
-          <p>${goal.category} ／ ${goal.deadline}</p>
-          <p>チェック済み: ${doneCount} / ${goal.items.length}</p>
-          <div class="progress-bar"><div class="progress-fill" style="width:${percent}%"></div></div>
-          ${goal.items.map((item, i) => `
-            <label><input type="checkbox" onchange="toggleChecklist(${goal.id}, ${i})" ${item.done ? 'checked' : ''}> ${item.text}</label><br>
-          `).join('')}
-        `;
-      } else if (goal.type === "free") {
-        const status = goal.status === "達成" ? "✔ 達成" : "⏳ 未達成";
-        div.innerHTML = `
-          <h3>${goal.title}</h3>
-          <p>${goal.category} ／ ${goal.deadline}</p>
-          <p>${status}</p>
-          <p>${goal.description}</p>
-          <label><input type="checkbox" onchange="toggleFreeStatus(${goal.id})" ${goal.status === '達成' ? 'checked' : ''}> 達成</label>
-        `;
-      }
-      goalContainer.appendChild(div);
-    });
-  }
+  // 👇 達成済みの目標は除外
+  const activeGoals = goals.filter(goal => goal.status !== "達成");
+
+  activeGoals.forEach(goal => {
+    const div = document.createElement("div");
+    div.className = "goal-card";
+
+    if (goal.type === "quantitative") {
+      const percent = Math.min((goal.currentProgress || 0) / goal.targetValue * 100, 100);
+      div.innerHTML = `
+        <h3>${goal.title}</h3>
+        <p>${goal.category} ／ ${goal.deadline}</p>
+        <p>進捗: ${(goal.currentProgress || 0)} / ${goal.targetValue}${goal.targetType}</p>
+        <div class="progress-bar"><div class="progress-fill" style="width:${percent}%"></div></div>
+        <input type="number" id="progressInput-${goal.id}" placeholder="追加${goal.targetType}">
+        <button class="button" onclick="updateProgress(${goal.id})">進捗を追加</button>
+      `;
+    } else if (goal.type === "checklist") {
+      const doneCount = goal.items.filter(i => i.done).length;
+      const percent = Math.min(doneCount / goal.items.length * 100, 100);
+      div.innerHTML = `
+        <h3>${goal.title}</h3>
+        <p>${goal.category} ／ ${goal.deadline}</p>
+        <p>チェック済み: ${doneCount} / ${goal.items.length}</p>
+        <div class="progress-bar"><div class="progress-fill" style="width:${percent}%"></div></div>
+        ${goal.items.map((item, i) => `
+          <label><input type="checkbox" onchange="toggleChecklist(${goal.id}, ${i})" ${item.done ? 'checked' : ''}> ${item.text}</label><br>
+        `).join('')}
+      `;
+    } else if (goal.type === "free") {
+      const status = goal.status === "達成" ? "✔ 達成" : "⏳ 未達成";
+      div.innerHTML = `
+        <h3>${goal.title}</h3>
+        <p>${goal.category} ／ ${goal.deadline}</p>
+        <p>${status}</p>
+        <p>${goal.description}</p>
+        <label><input type="checkbox" onchange="toggleFreeStatus(${goal.id})" ${goal.status === '達成' ? 'checked' : ''}> 達成</label>
+      `;
+    }
+    goalContainer.appendChild(div);
+  });
+}
 
   window.updateProgress = function(id) {
     const input = document.getElementById(`progressInput-${id}`);
