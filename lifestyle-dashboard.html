@@ -150,19 +150,24 @@
     }
 
     async function evaluateWithAI(summary) {
-      try {
-        const response = await fetch("https://openai-proxy-server-w980.onrender.com/evaluate", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ entry: summary })
-        });
-        const data = await response.json();
-        document.getElementById("evaluationText").textContent = data.reply.healthReview + "\n" + data.reply.improvementSuggestions;
-      } catch (err) {
-        console.error("AI評価に失敗しました:", err);
-        document.getElementById("evaluationText").textContent = "評価できませんでした。ネットワークを確認してください。";
-      }
+    try {
+      const response = await fetch("https://openai-proxy-server-w980.onrender.com/evaluate-lifestyle-summary", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ entry: summary })
+      });
+
+      const data = await response.json();
+      document.getElementById("evaluationText").textContent =
+        data.reply.healthReview + "\n\n" +
+        data.reply.improvementSuggestions + "\n\n" +
+        data.reply.encouragement;
+
+    } catch (err) {
+      console.error("AI評価に失敗しました:", err);
+      document.getElementById("evaluationText").textContent = "評価できませんでした。ネットワークを確認してください。";
     }
+  }
 
     const grouped = groupDatesByMonth(allDates);
     populateMonthOptions(grouped);

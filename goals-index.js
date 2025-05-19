@@ -87,7 +87,7 @@ window.generateAiSuggestion = async function () {
 【カテゴリ】：${category}
 【締め切り】：${deadline}
 
-提案は箇条書きで3つ以内にまとめてください。
+提案は箇条書きでまとめてください。
 `;
 
   const suggestionArea = document.getElementById("aiSuggestionResult");
