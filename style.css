@@ -10,6 +10,10 @@ body, html {
   padding: 20px;
 }
 
+.container p {
+  color: black;
+}
+
 header {
   display: flex;
   justify-content: space-between;
