@@ -262,3 +262,10 @@ td:hover {
   margin-top: 10px;
   border-radius: 5px;
 }
+
+.diary-button-box {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}

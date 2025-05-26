@@ -23,6 +23,9 @@ window.addEventListener("DOMContentLoaded", () => {
         <li><strong>起床時間:</strong> ${entry.wakeUp || "未入力"}</li>
         <li><strong>就寝時間:</strong> ${entry.sleep || "未入力"}</li>
         <li><strong>運動時間:</strong> ${entry.exercise || "未入力"} 分</li>
+        <li><strong>気分:</strong> ${entry.tension || "未入力"} / 5</li>
+        <li><strong>天気:</strong> ${entry.weather || "未入力"}</li>
+        <li><strong>支出:</strong> ${entry.expense || 0} 円</li>
         <li><strong>活動記録:</strong><br>${entry.notes || "未入力"}</li>
       </ul>
     `;
@@ -39,10 +42,10 @@ window.addEventListener("DOMContentLoaded", () => {
       `;
       div.appendChild(evaluationDiv);
 
+      // 🧠 AI評価ボタン
       const button = document.createElement("button");
       button.className = "button";
       button.textContent = "AI評価を見る";
-
       button.onclick = () => {
         if (evaluationDiv.style.display === "none") {
           evaluationDiv.style.display = "block";
@@ -53,9 +56,55 @@ window.addEventListener("DOMContentLoaded", () => {
         }
       };
 
-      div.appendChild(button);
-    }
+      // ✏️ 編集ボタン
+      const editButton = document.createElement("button");
+      editButton.className = "button";
+      editButton.textContent = "編集";
+      editButton.onclick = () => editDiaryEntry(date);
 
+      // 🗑 削除ボタン
+      const deleteButton = document.createElement("button");
+      deleteButton.className = "button";
+      deleteButton.textContent = "削除";
+      deleteButton.onclick = () => deleteDiaryEntry(date);
+
+      // 🔲 ボタンをまとめるボックスを作成
+      const buttonBox = document.createElement("div");
+      buttonBox.style.marginTop = "10px";
+      buttonBox.style.display = "flex";
+      buttonBox.style.gap = "10px";
+      buttonBox.style.flexWrap = "wrap"; // 狭い画面でも折り返し
+
+      // 🧠 ボタンを buttonBox に追加
+      buttonBox.appendChild(button);
+      buttonBox.appendChild(editButton);
+      buttonBox.appendChild(deleteButton);
+
+// 📦 最後に全体ボックスをdivに追加
+div.appendChild(buttonBox);
+
+}
     container.appendChild(div);
   });
 });
+
+function editDiaryEntry(date) {
+  const diary = JSON.parse(localStorage.getItem("diaryEntries") || "{}");
+  const entry = diary[date];
+  if (!entry) return alert("日記が見つかりません");
+
+  localStorage.setItem("editingDiaryDate", date);
+  localStorage.setItem("editingDiaryEntry", JSON.stringify(entry));
+
+  window.location.href = "index.html#edit-diary";
+}
+
+function deleteDiaryEntry(date) {
+  if (!confirm(`${date} の日記を本当に削除しますか？`)) return;
+
+  const diary = JSON.parse(localStorage.getItem("diaryEntries") || "{}");
+  delete diary[date];
+  localStorage.setItem("diaryEntries", JSON.stringify(diary));
+  alert("日記を削除しました");
+  location.reload();
+}

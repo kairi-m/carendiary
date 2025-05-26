@@ -196,12 +196,6 @@ function generateCalendar(date) {
   updateJobSelector();
 }
 
-function openForm(date) {
-  selectedDate = date;
-  document.getElementById("selectedDate").textContent = `${date} の予定追加`;
-  document.getElementById("eventForm").style.display = "block";
-}
-
 function closeEventForm() {
   document.getElementById("eventForm").style.display = "none";
 }
@@ -329,15 +323,44 @@ function openForm(date) {
   selectedDate = date;
   const today = new Date();
   const clicked = new Date(date);
+  today.setHours(0, 0, 0, 0);
+  clicked.setHours(0, 0, 0, 0);
 
-  if (clicked < new Date(today.getFullYear(), today.getMonth(), today.getDate())) {
+  if (clicked < today) {
+    // 過去 → 日記
     document.getElementById("eventForm").style.display = "none";
     document.getElementById("diaryForm").style.display = "block";
     document.getElementById("selectedDiaryDate").textContent = `${date} の日記`;
+  } else if (clicked.getTime() === today.getTime()) {
+    // 今日 → モーダルで選ばせる
+    showTodayChoiceModal(date);
   } else {
+    // 未来 → 予定
     document.getElementById("diaryForm").style.display = "none";
     document.getElementById("eventForm").style.display = "block";
     document.getElementById("selectedDate").textContent = `${date} の予定追加`;
+  }
+}
+
+function showTodayChoiceModal(date) {
+  selectedDate = date;
+  document.getElementById("todayChoiceModal").style.display = "block";
+}
+
+function closeTodayModal() {
+  document.getElementById("todayChoiceModal").style.display = "none";
+}
+
+function chooseToday(type) {
+  closeTodayModal();
+  if (type === "event") {
+    document.getElementById("diaryForm").style.display = "none";
+    document.getElementById("eventForm").style.display = "block";
+    document.getElementById("selectedDate").textContent = `${selectedDate} の予定追加`;
+  } else {
+    document.getElementById("eventForm").style.display = "none";
+    document.getElementById("diaryForm").style.display = "block";
+    document.getElementById("selectedDiaryDate").textContent = `${selectedDate} の日記`;
   }
 }
 
@@ -348,6 +371,14 @@ function closeDiaryForm() {
 async function saveDiary() {
   const parts = selectedDate.split("-");
   const date = `${parts[0]}-${parts[1].padStart(2, '0')}-${parts[2].padStart(2, '0')}`;
+
+  // 気分・天気・支出などの新規項目取得
+  const tension = document.getElementById("tension").value;
+  const weather = document.getElementById("weather")?.value || "";
+  const expense = document.getElementById("expense")?.value || "";
+  const expenseType = document.getElementById("expenseType")?.value || "";
+
+  // 既存＋拡張データをまとめて保存
   const entry = {
     breakfast: document.getElementById("breakfast").value,
     lunch: document.getElementById("lunch").value,
@@ -355,7 +386,11 @@ async function saveDiary() {
     wakeUp: document.getElementById("wakeUp").value,
     sleep: document.getElementById("sleep").value,
     exercise: document.getElementById("exercise").value,
-    notes: document.getElementById("notes").value
+    notes: document.getElementById("notes").value,
+    tension,
+    weather,
+    expense,
+    expenseType
   };
 
   // GPT-3.5に日記を送って評価を取得
@@ -369,7 +404,6 @@ async function saveDiary() {
   alert("日記とAI評価を保存しました！");
   closeDiaryForm();
 }
-
 
 async function searchWithAI() {
   const query = document.getElementById("aiQuery").value.trim();
@@ -442,3 +476,32 @@ async function evaluateDiaryWithAI(entry) {
     };
   }
 }
+
+document.addEventListener("DOMContentLoaded", () => {
+  const editDate = localStorage.getItem("editingDiaryDate");
+  const editEntry = localStorage.getItem("editingDiaryEntry");
+
+  if (editDate && editEntry && location.hash === "#edit-diary") {
+    const entry = JSON.parse(editEntry);
+    selectedDate = editDate;
+
+    document.getElementById("eventForm").style.display = "none";
+    document.getElementById("diaryForm").style.display = "block";
+    document.getElementById("selectedDiaryDate").textContent = `${editDate} の日記（編集）`;
+
+    document.getElementById("breakfast").value = entry.breakfast || "";
+    document.getElementById("lunch").value = entry.lunch || "";
+    document.getElementById("dinner").value = entry.dinner || "";
+    document.getElementById("wakeUp").value = entry.wakeUp || "";
+    document.getElementById("sleep").value = entry.sleep || "";
+    document.getElementById("exercise").value = entry.exercise || "";
+    document.getElementById("notes").value = entry.notes || "";
+    document.getElementById("tension").value = entry.tension || "";
+    document.getElementById("weather").value = entry.weather || "";
+    document.getElementById("expense").value = entry.expense || "";
+    document.getElementById("expenseType").value = entry.expenseType || "";
+
+    localStorage.removeItem("editingDiaryDate");
+    localStorage.removeItem("editingDiaryEntry");
+  }
+});
