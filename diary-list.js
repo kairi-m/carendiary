@@ -23,7 +23,7 @@ window.addEventListener("DOMContentLoaded", () => {
         <li><strong>起床時間:</strong> ${entry.wakeUp || "未入力"}</li>
         <li><strong>就寝時間:</strong> ${entry.sleep || "未入力"}</li>
         <li><strong>運動時間:</strong> ${entry.exercise || "未入力"} 分</li>
-        <li><strong>気分:</strong> ${entry.tension || "未入力"} / 5</li>
+        <li><strong>気分:</strong> ${entry.tension || "未入力"}</li>
         <li><strong>天気:</strong> ${entry.weather || "未入力"}</li>
         <li><strong>支出:</strong> ${entry.expense || 0} 円</li>
         <li><strong>活動記録:</strong><br>${entry.notes || "未入力"}</li>
