@@ -273,7 +273,25 @@ function calculateSalary() {
       }
     }
   }
-  document.getElementById("salaryDisplay").textContent = `今月の給料（概算）：¥${Math.floor(total)}`;
+  const expense = calculateMonthlyExpense();
+  document.getElementById("salaryDisplay").textContent = 
+    `今月の給料（概算）：¥${Math.floor(total)}　｜　今月の支出：¥${Math.floor(expense)}`;
+}
+
+function calculateMonthlyExpense() {
+  const diary = JSON.parse(localStorage.getItem("diaryEntries") || "{}");
+  const year = currentDate.getFullYear();
+  const month = String(currentDate.getMonth() + 1).padStart(2, '0');
+  let total = 0;
+
+  for (const date in diary) {
+    if (date.startsWith(`${year}-${month}`)) {
+      const expense = parseFloat(diary[date].expense);
+      if (!isNaN(expense)) total += expense;
+    }
+  }
+
+  return total;
 }
 
 function updateJobSelector() {
