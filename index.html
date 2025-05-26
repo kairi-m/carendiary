@@ -145,31 +145,71 @@
 
     <div id="eventForm" style="display:none;">
       <h2 id="selectedDate">予定追加</h2>
+      <label for="category">予定のカテゴリー</label>
       <select id="eventCategory" onchange="toggleJobSelect()"></select>
       <select id="jobSelector" style="display:none;"></select>
+      <label for="eventTitle">予定のタイトル</label>
       <input type="text" id="eventTitle" placeholder="タイトル">
       <label for="jobStart">開始時間</label>
       <input type="time" id="eventStart">
       <label for="jobFinish">終了時間</label>
       <input type="time" id="eventEnd">
-      <textarea id="eventMemo" placeholder="メモ（任意）"></textarea>
+      <label for="enentMemo">メモ</label>
+      <textarea id="eventMemo" placeholder="(任意)"></textarea>
       <button onclick="saveEvent()" class="button">保存</button>
       <button onclick="closeEventForm()" class="button">閉じる</button>
     </div>
 
     <div id="diaryForm" style="display:none;">
       <h2 id="selectedDiaryDate">日記入力</h2>
-      <input type="text" id="breakfast" placeholder="朝食">
-      <input type="text" id="lunch" placeholder="昼食">
-      <input type="text" id="dinner" placeholder="夕食">
+      <label for="breakfast">朝食</label>
+      <input type="text" id="breakfast" placeholder="食事内容">
+      <label for="lunch">昼食</label>
+      <input type="text" id="lunch" placeholder="食事内容">
+      <label for="dinner">夕食</label>
+      <input type="text" id="dinner" placeholder="食事内容">
       <label for="wakeupTime">起床時間</label>
       <input type="time" id="wakeUp">
       <label for="sleepTime">就寝時間</label>
       <input type="time" id="sleep">
+      <label for="exercise">運動時間</label>
       <input type="number" id="exercise" placeholder="運動時間（分）">
-      <textarea id="notes" placeholder="活動記録"></textarea>
+      <label>気分</label>
+      <select id="tension">
+        <option value="">選択してください</option>
+        <option value="とても良い">とても良い</option>
+        <option value="良い">良い</option>
+        <option value="普通">普通</option>
+        <option value="悪い">悪い</option>
+        <option value="とても悪い">とても悪い</option>
+      </select>
+      <label for="weather">天気</label>
+      <select id="weather">
+        <option value="">選択してください</option>
+        <option value="晴れ">晴れ</option>
+        <option value="曇り">曇り</option>
+        <option value="雨">雨</option>
+        <option value="雪">雪</option>
+      </select>
+      <label for="expense">支出（円）</label>
+      <input type="number" id="expense" min="0">
+      </select>
+      <label for="notes">活動記録</label>
+      <textarea id="notes" placeholder="今日の出来事・感想など"></textarea>
       <button onclick="saveDiary()" class="button">保存</button>
       <button onclick="closeDiaryForm()" class="button">閉じる</button>
+    </div>
+  </div>
+
+  <div id="todayChoiceModal" style="display: none; position: fixed; top: 0; left: 0;
+    width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 999;">
+    <div style="background: white; padding: 20px; border-radius: 10px;
+      width: 300px; margin: 150px auto; text-align: center;">
+      <p>今日の日付が選択されました。追加する内容を選んでください。</p>
+      <button onclick="chooseToday('event')" class="button">📅 予定を追加</button>
+      <button onclick="chooseToday('diary')" class="button">📖 日記を追加</button>
+      <br><br>
+      <button onclick="closeTodayModal()" class="button">閉じる</button>
     </div>
   </div>
 
