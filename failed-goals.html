@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>失敗した目標</title>
+  <link rel="stylesheet" href="goals.css">
+</head>
+<body>
+  <div class="container">
+    <h1>❌ 失敗した目標</h1>
+    <a href="index.html" class="button">← ホームに戻る</a>
+
+    <div id="failedGoalsList" style="margin: 20px;">
+      <!-- 失敗した目標がここに表示されます -->
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const goals = JSON.parse(localStorage.getItem("goals") || "[]");
+      const failedGoalsList = document.getElementById("failedGoalsList");
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      // 締め切りを過ぎて未達成の目標を抽出
+      const failedGoals = goals.filter(goal => {
+        const deadline = new Date(goal.deadline);
+        return deadline < today && goal.status !== "達成";
+      });
+
+      if (failedGoals.length === 0) {
+        failedGoalsList.innerHTML = "<p>現在、締め切りを過ぎた未達成の目標はありません。</p>";
+        return;
+      }
+
+      failedGoals.forEach(goal => {
+        const div = document.createElement("div");
+        div.className = "goal-card";
+
+        let progressInfo = "";
+        if (goal.type === "quantitative") {
+          const progress = (goal.currentProgress || 0);
+          progressInfo = `<p>最終進捗: ${progress} / ${goal.targetValue}${goal.targetType}</p>`;
+        } else if (goal.type === "checklist") {
+          const doneCount = goal.items.filter(i => i.done).length;
+          progressInfo = `<p>達成ステップ: ${doneCount} / ${goal.items.length}</p>`;
+        }
+
+        div.innerHTML = `
+          <h3>${goal.title}</h3>
+          <p>カテゴリー: ${goal.category}</p>
+          <p>締め切り日: ${goal.deadline}</p>
+          ${progressInfo}
+          <div class="goal-actions">
+            <button class="button" onclick="retryGoal(${goal.id})">やり直す</button>
+            <button class="button" onclick="deleteGoal(${goal.id})">削除</button>
+          </div>
+        `;
+        failedGoalsList.appendChild(div);
+      });
+    });
+
+    function retryGoal(goalId) {
+      const goals = JSON.parse(localStorage.getItem("goals") || "[]");
+      const goalIndex = goals.findIndex(g => g.id === goalId);
+      
+      if (goalIndex === -1) return;
+      
+      const goal = goals[goalIndex];
+      
+      // 新しい締め切り日を設定するためのプロンプト
+      const newDeadline = prompt("新しい締め切り日を入力してください（YYYY-MM-DD）:", new Date().toISOString().split('T')[0]);
+      if (!newDeadline) return;
+
+      // 古い締め切りイベントを削除
+      const events = JSON.parse(localStorage.getItem("calendarEvents") || "{}");
+      if (events[goal.deadline]) {
+        events[goal.deadline] = events[goal.deadline].filter(
+          event => !(event.category === "締め切り" && event.title === `${goal.title}の締め切り`)
+        );
+        if (events[goal.deadline].length === 0) {
+          delete events[goal.deadline];
+        }
+      }
+
+      // 目標を更新
+      goal.deadline = newDeadline;
+      if (goal.type === "quantitative") {
+        goal.currentProgress = 0;
+      } else if (goal.type === "checklist") {
+        goal.items = goal.items.map(item => ({ ...item, done: false }));
+      }
+      goals[goalIndex] = goal;
+      
+      // 新しい締め切りイベントを追加
+      if (!events[newDeadline]) {
+        events[newDeadline] = [];
+      }
+      events[newDeadline].push({
+        category: "締め切り",
+        title: `${goal.title}の締め切り`,
+        start: "00:00",
+        end: "23:59",
+        memo: "目標の締め切り"
+      });
+
+      localStorage.setItem("goals", JSON.stringify(goals));
+      localStorage.setItem("calendarEvents", JSON.stringify(events));
+      location.reload();
+    }
+
+    function deleteGoal(goalId) {
+      if (!confirm("この目標を削除してもよろしいですか？")) return;
+
+      const goals = JSON.parse(localStorage.getItem("goals") || "[]");
+      const goalIndex = goals.findIndex(g => g.id === goalId);
+      
+      if (goalIndex === -1) return;
+
+      // カレンダーからも締め切りイベントを削除
+      const goal = goals[goalIndex];
+      const events = JSON.parse(localStorage.getItem("calendarEvents") || "{}");
+      if (events[goal.deadline]) {
+        events[goal.deadline] = events[goal.deadline].filter(
+          event => !(event.category === "締め切り" && event.title === `${goal.title}の締め切り`)
+        );
+        if (events[goal.deadline].length === 0) {
+          delete events[goal.deadline];
+        }
+        localStorage.setItem("calendarEvents", JSON.stringify(events));
+      }
+
+      goals.splice(goalIndex, 1);
+      localStorage.setItem("goals", JSON.stringify(goals));
+      location.reload();
+    }
+  </script>
+</body>
+</html> 

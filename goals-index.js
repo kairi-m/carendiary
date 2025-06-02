@@ -9,7 +9,19 @@ function renderGoals() {
   if (!homeGoalContainer) return;
   homeGoalContainer.innerHTML = "";
 
-  const activeGoals = goals.filter(goal => goal.status !== "達成");
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  // 達成済みと期限切れの目標を除外
+  const activeGoals = goals.filter(goal => {
+    const deadline = new Date(goal.deadline);
+    return goal.status !== "達成" && deadline >= today;
+  });
+
+  if (activeGoals.length === 0) {
+    homeGoalContainer.innerHTML = "<p>現在、進行中の目標はありません。</p>";
+    return;
+  }
 
   activeGoals.forEach(goal => {
     const div = document.createElement("div");
@@ -29,12 +41,15 @@ function renderGoals() {
           <span class="goal-title" style="font-size: 1.2rem; font-weight: bold; color: #2c3e50;">${goal.title}</span>
           <span class="goal-progress" style="font-size: 1rem;">達成率: <strong>${percent}%</strong></span>
         </div>
+        <div class="progress-bar" style="background: #eee; height: 10px; border-radius: 5px; overflow: hidden;">
+          <div class="progress-fill" style="width: ${percent}%; height: 100%; background: #2ecc71;"></div>
+        </div>
         <div style="display: flex; align-items: center; justify-content: space-between; font-size: 0.95rem; color: #555;">
           <span>締切：${goal.deadline}</span>
           <span class="goal-actions" style="display: flex; gap: 8px;">
             <button class="delete" onclick="deleteGoal(${goal.id})">削除</button>
             <button class="delete" onclick="editGoal(${goal.id})">編集</button>
-            <button class="delete" onclick="markAsAchieved(${goal.id}, ${percent})">達成</button>
+            <button class="delete" onclick="toggleGoalStatus(${goal.id})">達成</button>
           </span>
         </div>
       </div>
@@ -43,36 +58,52 @@ function renderGoals() {
   });
 }
 
-function markAsAchieved(id, percent) {
-  if (percent < 100) {
-    alert("達成率が100%未満のため、達成できません。");
-    return;
-  }
-  const goal = goals.find(g => g.id === id);
-  goal.status = "達成";
-  saveGoals();
-  renderGoals();
-}
-
-function deleteGoal(id) {
-  if (!confirm("本当に削除しますか？")) return;
-  goals = goals.filter(g => g.id !== id);
-  saveGoals();
-  renderGoals();
-}
-
 function editGoal(id) {
   const goal = goals.find(g => g.id === id);
   if (!goal) return;
+  
   localStorage.setItem("editingGoal", JSON.stringify(goal));
-  window.location.href = `goals-edit.html`;
+  window.location.href = "goals-edit.html";
+}
+
+function deleteGoal(id) {
+  if (!confirm("この目標を削除してもよろしいですか？")) return;
+  
+  const goalIndex = goals.findIndex(g => g.id === id);
+  if (goalIndex === -1) return;
+
+  // カレンダーからも締め切りイベントを削除
+  const goal = goals[goalIndex];
+  const events = JSON.parse(localStorage.getItem("calendarEvents") || "{}");
+  if (events[goal.deadline]) {
+    events[goal.deadline] = events[goal.deadline].filter(
+      event => !(event.category === "締め切り" && event.title === `${goal.title}の締め切り`)
+    );
+    if (events[goal.deadline].length === 0) {
+      delete events[goal.deadline];
+    }
+    localStorage.setItem("calendarEvents", JSON.stringify(events));
+  }
+
+  goals.splice(goalIndex, 1);
+  saveGoals();
+  renderGoals();
+}
+
+function toggleGoalStatus(id) {
+  const goal = goals.find(g => g.id === id);
+  if (!goal) return;
+
+  goal.status = goal.status === "達成" ? "未達成" : "達成";
+  saveGoals();
+  renderGoals();
 }
 
 window.generateAiSuggestion = async function () {
   const title = document.getElementById("goalTitle")?.value.trim();
   const category = document.getElementById("goalCategory")?.value.trim();
   const deadline = document.getElementById("goalDeadline")?.value;
-  const type = document.getElementById("goalType")?.value; // 存在前提ならOK
+  const type = document.getElementById("goalType")?.value;
 
   if (!title || !category || !deadline) {
     alert("目標タイトル、カテゴリ、締め切りをすべて入力してください。");

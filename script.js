@@ -5,7 +5,7 @@ let jobs = JSON.parse(localStorage.getItem("jobList") || "[]");
 let categories = JSON.parse(localStorage.getItem("categoryList") || "[]");
 
 const defaultCategories = [
-  { name: "授業", color: "#007acc" },
+  { name: "締め切り", color: "#007acc" },
   { name: "テスト", color: "#e74c3c" },
   { name: "バイト", color: "#27ae60" },
   { name: "遊び", color: "#9b59b6" },

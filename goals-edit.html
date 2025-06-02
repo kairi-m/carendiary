@@ -63,6 +63,17 @@
       const index = goals.findIndex(g => g.id === editingGoal.id);
       if (index === -1) return;
 
+      // 古い締め切り日のイベントを削除
+      const events = JSON.parse(localStorage.getItem("calendarEvents") || "{}");
+      if (events[editingGoal.deadline]) {
+        events[editingGoal.deadline] = events[editingGoal.deadline].filter(
+          event => !(event.category === "締め切り" && event.title === `${editingGoal.title}の締め切り`)
+        );
+        if (events[editingGoal.deadline].length === 0) {
+          delete events[editingGoal.deadline];
+        }
+      }
+
       const updatedGoal = { ...editingGoal, title, category, deadline };
 
       if (editingGoal.type === "quantitative") {
@@ -77,6 +88,20 @@
 
       goals[index] = updatedGoal;
       localStorage.setItem("goals", JSON.stringify(goals));
+
+      // 新しい締め切り日のイベントを追加
+      if (!events[deadline]) {
+        events[deadline] = [];
+      }
+      events[deadline].push({
+        category: "締め切り",
+        title: `${title}の締め切り`,
+        start: "00:00",
+        end: "23:59",
+        memo: "目標の締め切り"
+      });
+      localStorage.setItem("calendarEvents", JSON.stringify(events));
+
       localStorage.removeItem("editingGoal");
       alert("目標を更新しました。");
       location.href = "index.html";

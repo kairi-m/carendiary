@@ -24,20 +24,31 @@
       <a href="goals.html#add" class="button">➕ 目標の追加</a>
       <a href="goals.html#list" class="button">📈 進捗管理</a>
       <a href="achieved-goals.html" class="button">✔ 達成した目標</a>
+      <a href="failed-goals.html" class="button">❌ 失敗した目標</a>
     </div>
   </div>
 
 <script>
   document.addEventListener("DOMContentLoaded", () => {
-    const homeGoalsList = document.getElementById("homeGoalsList");
+    const goalContainer = document.getElementById("goalContainer");
     const goals = JSON.parse(localStorage.getItem("goals") || "[]");
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
 
-    if (goals.length === 0) {
-      homeGoalsList.innerHTML = "<p>現在、登録された目標はありません。</p>";
+    // 達成済みと期限切れの目標を除外
+    const activeGoals = goals.filter(goal => {
+      const deadline = new Date(goal.deadline);
+      return goal.status !== "達成" && deadline >= today;
+    });
+
+    if (activeGoals.length === 0) {
+      goalContainer.innerHTML = "<p>現在、進行中の目標はありません。</p>";
       return;
     }
 
-    goals.forEach(goal => {
+    goalContainer.innerHTML = ""; // コンテナをクリア
+
+    activeGoals.forEach(goal => {
       const div = document.createElement("div");
       div.className = "goal-card";
       div.style.marginBottom = "15px";
@@ -74,17 +85,40 @@
           <button class="delete" onclick="deleteGoal(${goal.id})">削除</button>
         `;
       }
+      goalContainer.appendChild(div);
     });
   });
 
   function editGoal(id) {
-    window.location.href = `goals.html#edit-${id}`;
+    const goals = JSON.parse(localStorage.getItem("goals") || "[]");
+    const goal = goals.find(g => g.id === id);
+    if (!goal) return;
+    
+    localStorage.setItem("editingGoal", JSON.stringify(goal));
+    window.location.href = "goals-edit.html";
   }
 
   function deleteGoal(id) {
-    if (!confirm("本当に削除しますか？")) return;
-    let goals = JSON.parse(localStorage.getItem("goals") || "[]");
-    goals = goals.filter(g => g.id !== id);
+    if (!confirm("この目標を削除してもよろしいですか？")) return;
+    
+    const goals = JSON.parse(localStorage.getItem("goals") || "[]");
+    const goalIndex = goals.findIndex(g => g.id === id);
+    if (goalIndex === -1) return;
+
+    // カレンダーからも締め切りイベントを削除
+    const goal = goals[goalIndex];
+    const events = JSON.parse(localStorage.getItem("calendarEvents") || "{}");
+    if (events[goal.deadline]) {
+      events[goal.deadline] = events[goal.deadline].filter(
+        event => !(event.category === "締め切り" && event.title === `${goal.title}の締め切り`)
+      );
+      if (events[goal.deadline].length === 0) {
+        delete events[goal.deadline];
+      }
+      localStorage.setItem("calendarEvents", JSON.stringify(events));
+    }
+
+    goals.splice(goalIndex, 1);
     localStorage.setItem("goals", JSON.stringify(goals));
     location.reload();
   }

@@ -7,51 +7,57 @@
   }
 
   function renderGoals() {
-  if (!goalContainer) return;
-  goalContainer.innerHTML = "";
+    if (!goalContainer) return;
+    goalContainer.innerHTML = "";
 
-  // 👇 達成済みの目標は除外
-  const activeGoals = goals.filter(goal => goal.status !== "達成");
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
 
-  activeGoals.forEach(goal => {
-    const div = document.createElement("div");
-    div.className = "goal-card";
+    // 👇 達成済みの目標と締め切りを過ぎた目標は除外
+    const activeGoals = goals.filter(goal => {
+      const deadline = new Date(goal.deadline);
+      return goal.status !== "達成" && deadline >= today;
+    });
 
-    if (goal.type === "quantitative") {
-      const percent = Math.min((goal.currentProgress || 0) / goal.targetValue * 100, 100);
-      div.innerHTML = `
-        <h3>${goal.title}</h3>
-        <p>${goal.category} ／ ${goal.deadline}</p>
-        <p>進捗: ${(goal.currentProgress || 0)} / ${goal.targetValue}${goal.targetType}</p>
-        <div class="progress-bar"><div class="progress-fill" style="width:${percent}%"></div></div>
-        <input type="number" id="progressInput-${goal.id}" placeholder="追加${goal.targetType}">
-        <button class="button" onclick="updateProgress(${goal.id})">進捗を追加</button>
-      `;
-    } else if (goal.type === "checklist") {
-      const doneCount = goal.items.filter(i => i.done).length;
-      const percent = Math.min(doneCount / goal.items.length * 100, 100);
-      div.innerHTML = `
-        <h3>${goal.title}</h3>
-        <p>${goal.category} ／ ${goal.deadline}</p>
-        <p>チェック済み: ${doneCount} / ${goal.items.length}</p>
-        <div class="progress-bar"><div class="progress-fill" style="width:${percent}%"></div></div>
-        ${goal.items.map((item, i) => `
-          <label><input type="checkbox" onchange="toggleChecklist(${goal.id}, ${i})" ${item.done ? 'checked' : ''}> ${item.text}</label><br>
-        `).join('')}
-      `;
-    } else if (goal.type === "free") {
-      const status = goal.status === "達成" ? "✔ 達成" : "⏳ 未達成";
-      div.innerHTML = `
-        <h3>${goal.title}</h3>
-        <p>${goal.category} ／ ${goal.deadline}</p>
-        <p>${status}</p>
-        <p>${goal.description}</p>
-        <label><input type="checkbox" onchange="toggleFreeStatus(${goal.id})" ${goal.status === '達成' ? 'checked' : ''}> 達成</label>
-      `;
-    }
-    goalContainer.appendChild(div);
-  });
-}
+    activeGoals.forEach(goal => {
+      const div = document.createElement("div");
+      div.className = "goal-card";
+
+      if (goal.type === "quantitative") {
+        const percent = Math.min((goal.currentProgress || 0) / goal.targetValue * 100, 100);
+        div.innerHTML = `
+          <h3>${goal.title}</h3>
+          <p>${goal.category} ／ ${goal.deadline}</p>
+          <p>進捗: ${(goal.currentProgress || 0)} / ${goal.targetValue}${goal.targetType}</p>
+          <div class="progress-bar"><div class="progress-fill" style="width:${percent}%"></div></div>
+          <input type="number" id="progressInput-${goal.id}" placeholder="追加${goal.targetType}">
+          <button class="button" onclick="updateProgress(${goal.id})">進捗を追加</button>
+        `;
+      } else if (goal.type === "checklist") {
+        const doneCount = goal.items.filter(i => i.done).length;
+        const percent = Math.min(doneCount / goal.items.length * 100, 100);
+        div.innerHTML = `
+          <h3>${goal.title}</h3>
+          <p>${goal.category} ／ ${goal.deadline}</p>
+          <p>チェック済み: ${doneCount} / ${goal.items.length}</p>
+          <div class="progress-bar"><div class="progress-fill" style="width:${percent}%"></div></div>
+          ${goal.items.map((item, i) => `
+            <label><input type="checkbox" onchange="toggleChecklist(${goal.id}, ${i})" ${item.done ? 'checked' : ''}> ${item.text}</label><br>
+          `).join('')}
+        `;
+      } else if (goal.type === "free") {
+        const status = goal.status === "達成" ? "✔ 達成" : "⏳ 未達成";
+        div.innerHTML = `
+          <h3>${goal.title}</h3>
+          <p>${goal.category} ／ ${goal.deadline}</p>
+          <p>${status}</p>
+          <p>${goal.description}</p>
+          <label><input type="checkbox" onchange="toggleFreeStatus(${goal.id})" ${goal.status === '達成' ? 'checked' : ''}> 達成</label>
+        `;
+      }
+      goalContainer.appendChild(div);
+    });
+  }
 
   window.updateProgress = function(id) {
     const input = document.getElementById(`progressInput-${id}`);
@@ -76,6 +82,25 @@
     saveGoals();
     renderGoals();
   };
+
+  function addGoalToCalendar(goal) {
+    const events = JSON.parse(localStorage.getItem("calendarEvents") || "{}");
+    const date = goal.deadline;
+    
+    if (!events[date]) {
+      events[date] = [];
+    }
+    
+    events[date].push({
+      category: "締め切り",
+      title: `${goal.title}の締め切り`,
+      start: "00:00",
+      end: "23:59",
+      memo: "目標の締め切り"
+    });
+    
+    localStorage.setItem("calendarEvents", JSON.stringify(events));
+  }
 
   window.addQuantitativeGoal = function() {
     const title = document.getElementById("goalTitle").value.trim();
@@ -102,6 +127,7 @@
 
     goals.push(newGoal);
     saveGoals();
+    addGoalToCalendar(newGoal);
     alert("目標を追加しました。");
     location.href = "goals.html#list";
   };
@@ -129,6 +155,7 @@
 
     goals.push(newGoal);
     saveGoals();
+    addGoalToCalendar(newGoal);
     alert("目標を追加しました。");
     location.href = "goals.html#list";
   };
@@ -156,6 +183,7 @@
 
     goals.push(newGoal);
     saveGoals();
+    addGoalToCalendar(newGoal);
     alert("目標を追加しました。");
     location.href = "goals.html#list";
   };
